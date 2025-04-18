@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python REPL in Browser</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f0f0f0;
+        }
+        #repl-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        #input {
+            width: 100%;
+            height: 40px;
+            font-size: 16px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+        #output {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        #loading {
+            color: #555;
+        }        
+    </style>
+</head>
+<body>
+    <div id="repl-container">
+        <h2>Python REPL in Browser (Powered by Pyodide)</h2>
+        <div id="loading">Loading Pyodide...</div>
+        <input id="input" placeholder="Enter Python code (e.g., 3 + 7)" disabled>
+        <div id="output"></div>
+    </div>
+
+    <script>
+        let pyodide;
+        let outputElement = document.getElementById("output");
+        let inputElement = document.getElementById("input");
+
+        async function initializePyodide() {
+            try {
+                pyodide = await loadPyodide();
+                document.getElementById("loading").style.display = "none";
+                inputElement.disabled = false;
+                inputElement.focus();
+                outputElement.textContent = "Pyodide loaded. Enter Python code above.\n";
+            } catch (error) {
+                outputElement.textContent = "Error loading Pyodide: " + error.message;
+            }
+        }
+
+        function appendOutput(text) {
+            outputElement.textContent += text + "\n";
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+
+        async function runCode(code) {
+            try {
+                // Redirect stdout to capture print statements
+                pyodide.runPython(`
+                    import sys
+                    from io import StringIO
+                    sys.stdout = StringIO()
+                `);
+                
+                // Evaluate the code
+                let result = await pyodide.runPythonAsync(code);
+                
+                // Get stdout content
+                let stdout = pyodide.runPython("sys.stdout.getvalue()");
+                pyodide.runPython("sys.stdout = sys.__stdout__"); // Reset stdout
+                
+                // Display stdout if any
+                if (stdout) {
+                    appendOutput(stdout.trim());
+                }
+                
+                // Display result if it's not undefined
+                if (result !== undefined) {
+                    appendOutput(result.toString());
+                }
+            } catch (error) {
+                appendOutput("Error: " + error.message);
+            }
+        }
+
+        inputElement.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                let code = inputElement.value.trim();
+                if (code) {
+                    appendOutput(">>> " + code);
+                    runCode(code);
+                    inputElement.value = "";
+                }
+            }
+        });
+
+        initializePyodide();
+    </script>
+</body>
+</html>
