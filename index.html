@@ -9,12 +9,12 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
+            margin: 0;
             background-color: #f0f0f0;
         }
         #repl-container {
             max-width: 800px;
-            max-height: 100vh;
+            height: 100vh;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
@@ -22,10 +22,12 @@
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             box-sizing: border-box;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
         #input {
             width: 100%;
-            height: 40px;
+            height: 150px;
             font-size: 16px;
             padding: 10px;
             margin-bottom: 10px;
@@ -33,6 +35,7 @@
             border-radius: 4px;
             font-family: monospace;
             box-sizing: border-box;
+            resize: vertical;
         }
         #output {
             background-color: #f8f8f8;
@@ -40,22 +43,38 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             min-height: 100px;
-            max-height: calc(100vh - 160px);
+            max-height: calc(100vh - 250px);
             font-family: monospace;
             white-space: pre-wrap;
             box-sizing: border-box;
             overflow: auto;
+            flex-grow: 1;
         }
         #loading {
             color: #555;
+        }
+        #run-button {
+            background-color: #f8f8f8;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        .hint {
+            font-size: 12px;
+            color: #555;
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div id="repl-container">
-        <h2>Python REPL in Browser (Powered by Pyodide)</h2>
+        <h2 style="text-align: center;">🎉 Python REPL in Browser (Powered by Pyodide) 🎉</h2>
         <div id="loading">Loading Pyodide...</div>
-        <input id="input" placeholder="Enter Python code (e.g., 3 + 7)" disabled>
+        <div class="hint">Enter Python code below. Press Ctrl + Enter to run.</div>
+        <textarea id="input" placeholder="Enter Python code (e.g., for i in range(3):\n    print(i))" disabled></textarea>
+        <button id="run-button">Run</button>
         <div id="output"></div>
     </div>
 
@@ -63,6 +82,7 @@
         let pyodide;
         let outputElement = document.getElementById("output");
         let inputElement = document.getElementById("input");
+        let runButton = document.getElementById("run-button");
 
         async function initializePyodide() {
             try {
@@ -70,7 +90,7 @@
                 document.getElementById("loading").style.display = "none";
                 inputElement.disabled = false;
                 inputElement.focus();
-                outputElement.textContent = "Pyodide loaded. Enter Python code above.\n";
+                outputElement.textContent = "Pyodide loaded. Enter Python code above (Ctrl + Enter to run).\n";
             } catch (error) {
                 outputElement.textContent = "Error loading Pyodide: " + error.message;
             }
@@ -97,6 +117,10 @@
                 let stdout = pyodide.runPython("sys.stdout.getvalue()");
                 pyodide.runPython("sys.stdout = sys.__stdout__"); // Reset stdout
                 
+                // Display code with >>> prefix for each line
+                let codeLines = code.trim().split('\n').map(line => `>>> ${line}`).join('\n');
+                appendOutput(codeLines);
+                
                 // Display stdout if any
                 if (stdout) {
                     appendOutput(stdout.trim());
@@ -111,16 +135,26 @@
             }
         }
 
-        inputElement.addEventListener("keypress", function(event) {
-            if (event.key === "Enter") {
+        function handleInput(event) {
+            if (event.ctrlKey && event.key === "Enter") {
                 let code = inputElement.value.trim();
                 if (code) {
-                    appendOutput(">>> " + code);
                     runCode(code);
                     inputElement.value = "";
                 }
             }
-        });
+        }
+
+        function executeCode() {
+            let code = inputElement.value.trim();
+            if (code) {
+                runCode(code);
+                inputElement.value = "";
+            }
+        }
+
+        inputElement.addEventListener("keydown", handleInput);
+        runButton.addEventListener("click", executeCode);
 
         initializePyodide();
     </script>
