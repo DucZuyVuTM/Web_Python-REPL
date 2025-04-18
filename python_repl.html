@@ -13,11 +13,14 @@
         }
         #repl-container {
             max-width: 800px;
+            max-height: 100vh;
             margin: 0 auto;
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-sizing: border-box;
+            overflow: hidden;
         }
         #input {
             width: 100%;
@@ -36,13 +39,15 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             min-height: 100px;
+            max-height: calc(100vh - 160px);
             font-family: monospace;
             white-space: pre-wrap;
-            overflow-x: auto;
+            box-sizing: border-box;
+            overflow: auto;
         }
         #loading {
             color: #555;
-        }        
+        }
     </style>
 </head>
 <body>
