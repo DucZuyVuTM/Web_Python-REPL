@@ -29,6 +29,7 @@ async function runCode(code) {
         // Redirect stdout to capture print statements
         pyodide.runPython(`
             import sys
+            from math import *
             from io import StringIO
             sys.stdout = StringIO()
         `);
