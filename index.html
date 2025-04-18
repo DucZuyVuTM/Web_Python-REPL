@@ -102,6 +102,10 @@
         }
 
         async function runCode(code) {
+            // Display code with >>> prefix for each line
+            let codeLines = code.trim().split('\n').map(line => `>>> ${line}`).join('\n');
+            appendOutput(codeLines);
+
             try {
                 // Redirect stdout to capture print statements
                 pyodide.runPython(`
@@ -116,10 +120,6 @@
                 // Get stdout content
                 let stdout = pyodide.runPython("sys.stdout.getvalue()");
                 pyodide.runPython("sys.stdout = sys.__stdout__"); // Reset stdout
-                
-                // Display code with >>> prefix for each line
-                let codeLines = code.trim().split('\n').map(line => `>>> ${line}`).join('\n');
-                appendOutput(codeLines);
                 
                 // Display stdout if any
                 if (stdout) {
